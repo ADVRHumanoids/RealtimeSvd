@@ -77,9 +77,11 @@ inline void LapackSvd::allocate_workspace()
     
     double *s = _sv.data(), *u = _U.data(), *vt = _Vt.data();
     int n = _rows, m = _cols;
+    
+    char job[2] = {'A', '\0'};
 
     // Call dgesdd_ with lwork = -1 to query optimal workspace size:
-    dgesdd_("A",            // #1   Job (A -> compute complete SVD)
+    dgesdd_(job,            // #1   Job (A -> compute complete SVD)
             &n,             // #2   Rows
             &m,             // #3   Cols
             _A.data(),      // #4   Pointer to matrix data
@@ -120,7 +122,9 @@ inline bool LapackSvd::compute(const Eigen::MatrixBase<Derived>& A)
     int work_size = _d_work.size();
     int info = 0;
     int n = _rows, m = _cols;
-    dgesdd_("A",             // #1   Job (A -> compute complete SVD)
+    char job[2] = {'A', '\0'};
+    
+    dgesdd_(job,             // #1   Job (A -> compute complete SVD)
             &n,              // #2   Rows
             &m,              // #3   Cols
             _A.data(),       // #4   Pointer to matrix data
