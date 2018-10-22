@@ -39,11 +39,11 @@ TEST_F(TestSvd, checkVsEigen)
         
         ASSERT_TRUE(svd.compute(K));
         
-        Eigen::MatrixXd Khat = svd.matrixU()*svd.singularValues().asDiagonal()*svd.matrixVt().topRows(K.rows());
+        Eigen::MatrixXd Khat = svd.matrixU()*svd.singularValues().asDiagonal()*svd.matrixV().transpose().topRows(K.rows());
         
         std::cout << "************\n" << svd.matrixU() << "\n" << std::endl;
         std::cout << svd.singularValues().transpose() << "\n" << std::endl;
-        std::cout << svd.matrixVt() << "\n" << std::endl;
+        std::cout << svd.matrixV() << "\n" << std::endl;
         std::cout << K << "\n" << std::endl;
         std::cout << Khat << "\n" << std::endl;
         
@@ -74,11 +74,11 @@ TEST_F(TestSvd, checkVsEigenBig)
         
         ASSERT_TRUE(svd.compute(K));
         
-        Eigen::MatrixXd Khat = svd.matrixU()*svd.singularValues().asDiagonal()*svd.matrixVt().topRows(K.rows());
+        Eigen::MatrixXd Khat = svd.matrixU()*svd.singularValues().asDiagonal()*svd.matrixV().transpose().topRows(K.rows());
         
         std::cout << "************\n" << svd.matrixU() << "\n" << std::endl;
         std::cout << svd.singularValues().transpose() << "\n" << std::endl;
-        std::cout << svd.matrixVt() << "\n" << std::endl;
+        std::cout << svd.matrixV() << "\n" << std::endl;
         std::cout << K << "\n" << std::endl;
         std::cout << Khat << "\n" << std::endl;
         
@@ -108,11 +108,11 @@ TEST_F(TestSvd, checkVsEigen1)
         
         ASSERT_TRUE(svd.compute(K));
         
-        Eigen::MatrixXd Khat = svd.matrixU().leftCols(m)*svd.singularValues().asDiagonal()*svd.matrixVt();
+        Eigen::MatrixXd Khat = svd.matrixU().leftCols(m)*svd.singularValues().asDiagonal()*svd.matrixV().transpose();
         
         std::cout << "************\n" << svd.matrixU() << "\n" << std::endl;
         std::cout << svd.singularValues().transpose() << "\n" << std::endl;
-        std::cout << svd.matrixVt() << "\n" << std::endl;
+        std::cout << svd.matrixV() << "\n" << std::endl;
         std::cout << K << "\n" << std::endl;
         std::cout << Khat << "\n" << std::endl;
         
@@ -151,11 +151,11 @@ TEST_F(TestSvd, checkMalloc)
         ASSERT_TRUE(svd.compute(K));
         XBot::Utils::MallocFinder::Disable();
         
-        Eigen::MatrixXd Khat = svd.matrixU()*svd.singularValues().asDiagonal()*svd.matrixVt().topRows(K.rows());
+        Eigen::MatrixXd Khat = svd.matrixU()*svd.singularValues().asDiagonal()*svd.matrixV().transpose().topRows(K.rows());
         
         std::cout << "************\n" << svd.matrixU() << "\n" << std::endl;
         std::cout << svd.singularValues().transpose() << "\n" << std::endl;
-        std::cout << svd.matrixVt() << "\n" << std::endl;
+        std::cout << svd.matrixV() << "\n" << std::endl;
         std::cout << K << "\n" << std::endl;
         std::cout << Khat << "\n" << std::endl;
         

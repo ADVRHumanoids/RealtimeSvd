@@ -20,7 +20,7 @@ public:
     bool compute(const Eigen::MatrixBase<Derived>& A);
     
     const Eigen::MatrixXd& matrixU() const;
-    const Eigen::MatrixXd& matrixVt() const;
+    const Eigen::MatrixXd& matrixV() const;
     const Eigen::VectorXd& singularValues() const;
     
 private:
@@ -34,7 +34,7 @@ private:
     std::vector<double> _d_work;
     
     Eigen::VectorXd _sv;
-    Eigen::MatrixXd _U, _Vt;
+    Eigen::MatrixXd _U, _V;
     Eigen::MatrixXd _A;
 };
 
@@ -66,7 +66,7 @@ inline void LapackSvd::allocate_workspace()
     
     _sv.setZero(std::min(_rows, _cols));
     _U.setZero(_rows, _rows);
-    _Vt.setZero(_cols, _cols);
+    _V.setZero(_cols, _cols);
     _A.setZero(_rows, _cols);
     
     
@@ -75,7 +75,7 @@ inline void LapackSvd::allocate_workspace()
     _i_work.resize(8 * _sv.size());
     int info = 0;
     
-    double *s = _sv.data(), *u = _U.data(), *vt = _Vt.data();
+    double *s = _sv.data(), *u = _U.data(), *v = _V.data();
     int n = _rows, m = _cols;
     
     char job[2] = {'A', '\0'};
@@ -89,7 +89,7 @@ inline void LapackSvd::allocate_workspace()
             s,              // #6   Buffer for singular values vector (size: min(n,m))
             u,              // #7   Buffer for matrix U (size: n x n)
             &n,             // #8   Leading dimension for U
-            vt,             // #9   Buffer for matrix Vt (size: m x m)
+            v,              // #9   Buffer for matrix Vt (size: m x m)
             &m,             // #10  Leading dimension for Vt
             &work_size,     // #11  Workspace (if lwork = 1, it returns optimal workspace size)
             &lwork,         // #12  Size of workspace (if lwork = 1, arg #11 returns optimal workspace size)
@@ -116,7 +116,7 @@ inline bool LapackSvd::compute(const Eigen::MatrixBase<Derived>& A)
     
     _A.noalias() = A;
     
-    double *s = _sv.data(), *u = _U.data(), *vt = _Vt.data();
+    double *s = _sv.data(), *u = _U.data(), *v = _V.data();
     double *work = _d_work.data();
     int *iwork = _i_work.data();
     int work_size = _d_work.size();
@@ -132,12 +132,14 @@ inline bool LapackSvd::compute(const Eigen::MatrixBase<Derived>& A)
             s,               // #6   Buffer for singular values vector (size: min(n,m))
             u,               // #7   Buffer for matrix U (size: n x n)
             &n,              // #8   Leading dimension for U
-            vt,              // #9   Buffer for matrix Vt (size: m x m)
+            v,               // #9   Buffer for matrix Vt (size: m x m)
             &m,              // #10  Leading dimension for Vt
             work,            // #11  Workspace (if lwork = 1, it returns optimal workspace size)
             &work_size,      // #12  Size of workspace (if lwork = 1, arg #11 returns optimal workspace size)
             _i_work.data(),  // #13  Workspace
             &info);          // #14  Status information
+    
+    _V.transposeInPlace();
     
     if(info)
     {
@@ -154,9 +156,9 @@ inline const Eigen::MatrixXd& LapackSvd::matrixU() const
     return _U;
 }
 
-inline const Eigen::MatrixXd& LapackSvd::matrixVt() const
+inline const Eigen::MatrixXd& LapackSvd::matrixV() const
 {
-    return _Vt;
+    return _V;
 }
 
 inline const Eigen::VectorXd& LapackSvd::singularValues() const
