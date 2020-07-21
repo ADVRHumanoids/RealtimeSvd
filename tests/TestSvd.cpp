@@ -174,6 +174,60 @@ TEST_F(TestSvd, checkMalloc)
     
 };
 
+TEST_F(TestSvd, checkVsEigenRank)
+{
+    const int n = 7, m = 3;
+    
+    Eigen::MatrixXd K(n, m);
+    LapackSvd svd(K.rows(), K.cols());
+    
+    for(int i = 0; i < 3; i++)
+    {
+    
+        K.setRandom(n, m);
+        K.col(1) = K.col(2);
+        
+        ASSERT_TRUE(svd.compute(K));
+        
+        std::cout << "************\n" << svd.singularValues().transpose() << "\n" << std::endl;
+        std::cout << "Rank = " << svd.rank() << "\n" << std::endl;
+        
+        Eigen::JacobiSVD<Eigen::MatrixXd> eig_svd(K, Eigen::ComputeFullU|Eigen::ComputeFullV);
+        
+        ASSERT_EQ(eig_svd.rank(), svd.rank());
+    }
+    
+};
+
+TEST_F(TestSvd, checkVsEigenSolve)
+{
+    const int n = 7, m = 3;
+    
+    Eigen::MatrixXd K(n, m);
+    Eigen::VectorXd b(n);
+    Eigen::VectorXd x(m);
+    LapackSvd svd(K.rows(), K.cols());
+    
+    for(int i = 0; i < 3; i++)
+    {
+    
+        K.setRandom(n, m);
+        b.setRandom(n);
+        
+        ASSERT_TRUE(svd.compute(K));
+        
+        Eigen::JacobiSVD<Eigen::MatrixXd> eig_svd(K, Eigen::ComputeFullU|Eigen::ComputeFullV);
+        
+        svd.solve(b,x);
+        std::cout << "************\nLapack SVD: " << x << "\n" << std::endl;
+        std::cout << "************\nEigen SVD: " << eig_svd.solve(b) << "\n" << std::endl;
+        
+        EXPECT_NEAR( (eig_svd.solve(b) - x).norm(), 0.0, 1e-6 );
+    }
+    
+};
+
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

@@ -23,6 +23,12 @@ public:
     const Eigen::MatrixXd& matrixV() const;
     const Eigen::VectorXd& singularValues() const;
     
+    const Eigen::Index rank() const;
+    void setThreshold(const double& th);
+    void solve(const Eigen::VectorXd& b, Eigen::VectorXd& x);
+    
+    static constexpr double DEFAULT_SVD_THRESHOLD = 1.0e-3;
+    
 private:
     
     void allocate_workspace();
@@ -36,6 +42,9 @@ private:
     Eigen::VectorXd _sv;
     Eigen::MatrixXd _U, _V;
     Eigen::MatrixXd _A;
+    
+    Eigen::VectorXd _tmp, _tmp2;
+    double _threshold;
 };
 
 
@@ -44,14 +53,16 @@ private:
 
 inline LapackSvd::LapackSvd():
     _rows(-1),
-    _cols(-1)
+    _cols(-1),
+    _threshold(DEFAULT_SVD_THRESHOLD)
 {
 
 }
 
 inline LapackSvd::LapackSvd(int n, int m):
     _rows(n),
-    _cols(m)
+    _cols(m),
+    _threshold(DEFAULT_SVD_THRESHOLD)
 {
     allocate_workspace();
 }
@@ -68,6 +79,9 @@ inline void LapackSvd::allocate_workspace()
     _U.setZero(_rows, _rows);
     _V.setZero(_cols, _cols);
     _A.setZero(_rows, _cols);
+    
+    _tmp.setZero(_rows);
+    _tmp2.setZero(_rows);
     
     
     double work_size = -1;
@@ -166,5 +180,35 @@ inline const Eigen::VectorXd& LapackSvd::singularValues() const
     return _sv;
 }
 
+inline const Eigen::Index LapackSvd::rank() const
+{
+    if(_sv.size()==0) return 0;
+    double premultiplied_threshold = _sv.coeff(0) * _threshold;
+    Eigen::Index i = _sv.size() - 1;
+    while(i>=0 && _sv.coeff(i) < premultiplied_threshold) 
+        --i;
+    return i+1;
+}
+
+inline void LapackSvd::setThreshold(const double& th)
+{
+    _threshold = th;
+}
+
+inline void LapackSvd::solve(const Eigen::VectorXd& b, Eigen::VectorXd& x)
+{
+    if( _A.rows() != b.rows() || _A.cols() != x.rows() )
+    {
+        throw std::invalid_argument("_A.rows() != b.rows() || A.cols() != x.rows()");
+    }
+    
+    // A = U S V^*
+    // So A^{-1} = V S^{-1} U^*
+    // Ax = b --> x = A^{-1} * b
+    Eigen::Index l_rank = rank();
+    _tmp.noalias() =  matrixU().leftCols(l_rank).adjoint() * b;
+    _tmp2.noalias() = singularValues().head(l_rank).asDiagonal().inverse() * _tmp;
+    x.noalias() = matrixV().leftCols(l_rank) * _tmp2;
+}
 
 #endif
